@@ -1,0 +1,5 @@
+<feature name='camel-core' version='2.16.0' resolver='(obr)' start-level='50'>
+      <feature version='2.5.0'>xml-specs-api</feature>
+      <bundle>mvn:com.example.osgi/service/1.0 </bundle>
+      <bundle>mvn:com.example.osgi/client/1.0</bundle>
+  </feature>
