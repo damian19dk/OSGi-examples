@@ -21,13 +21,12 @@ public class LoggingServiceImpl implements LoggingService {
     public void logEvent(EventType type, String message) {
         final Event event = new Event(type, message);
         eventRepository.createEvent(event);
-
         switch (type) {
             case USER:
                 logger.info(event.toString());
             case RANDOM:
                 final Consumer<String> logMessage = random.nextBoolean() ? logger::warn : logger::debug;
-                logMessage.accept("RANDOM " + event.toString());
+                logMessage.accept(event.toString());
             case SYSTEM:
                 logger.warn(event.toString());
         }

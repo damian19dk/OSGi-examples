@@ -46,4 +46,8 @@ public class EventRepository {
     void addMonitoringListener(MonitoringListener monitoringListener) {
         this.listeners.add(monitoringListener);
     }
+
+    void clearMonitoringListeners() {
+        this.listeners.clear();
+    }
 }

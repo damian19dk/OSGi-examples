@@ -34,4 +34,8 @@ public class Event {
     public String toString() {
         return String.format("%s %s", type, message);
     }
+
+    public String toCsvLine() {
+        return String.format("%s,%s,%s,%s", uuid.toString(), time.toString(), type.toString(), message);
+    }
 }

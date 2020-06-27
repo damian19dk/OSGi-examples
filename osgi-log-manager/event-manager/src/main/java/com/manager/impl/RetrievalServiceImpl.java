@@ -4,14 +4,12 @@ package com.manager.impl;
 import com.manager.api.definition.RetrievalService;
 import com.manager.api.model.Event;
 import com.manager.api.model.EventType;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 
 import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,24 +22,27 @@ public class RetrievalServiceImpl implements RetrievalService {
         final List<Event> eventsToSave = this.eventRepository.getEvents().stream()
                 .filter(event -> type.equals(event.getType()))
                 .filter(event -> isBetweenStartAndEndDate(event, startTime, endTime))
+                .sorted(Comparator.comparing(Event::getTime))
                 .collect(Collectors.toList());
 
-//        saveSystemEventsToCsv(eventsToSave, "/tmp/csvData.csv");
-        this.eventRepository.clearEvents();
+        saveSystemEventsToCsv(eventsToSave, "/tmp/csvData.csv");
+        this.eventRepository.getEvents().removeAll(eventsToSave);
     }
 
-//    private void saveSystemEventsToCsv(List<Event> events, String path) {
-//        try (final BufferedWriter writer = Files.newBufferedWriter(Paths.get(path))) {
-//            final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("uuid", "time", "type", "message"));
-//            csvPrinter.printRecords(events);
-//            csvPrinter.flush();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+    private void saveSystemEventsToCsv(List<Event> events, String path) {
+        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(path, true))) {
+            for (Event event : events) {
+                writer.write(event.toCsvLine());
+                writer.newLine();
+                writer.flush();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private boolean isBetweenStartAndEndDate(Event event, LocalDateTime startDate, LocalDateTime endDate) {
-        return startDate.compareTo(event.getTime()) >= 0
-                && endDate.compareTo(event.getTime()) <= 0;
+        return (event.getTime().isAfter(startDate) || event.getTime().isEqual(startDate))
+                && (event.getTime().isBefore(endDate) || event.getTime().isEqual(endDate));
     }
 }

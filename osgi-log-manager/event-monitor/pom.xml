@@ -47,9 +47,6 @@
                         <Bundle-Activator>
                             com.monitor.EventMonitor
                         </Bundle-Activator>
-                        <Private-Package>
-                            com.monitor
-                        </Private-Package>
                         <Export-Package>
                             com.monitor
                         </Export-Package>
