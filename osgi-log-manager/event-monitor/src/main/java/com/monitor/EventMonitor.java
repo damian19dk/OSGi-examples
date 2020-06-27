@@ -1,55 +1,64 @@
 package com.monitor;
 
 import com.manager.api.definition.MonitoringService;
+import com.manager.api.definition.RetrievalService;
 import com.manager.api.model.EventType;
 import com.manager.api.model.MonitoringListener;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+
+import java.time.LocalDateTime;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.nonNull;
 
-public class EventMonitor implements BundleActivator, ServiceListener {
+public class EventMonitor implements BundleActivator {
 
     private BundleContext ctx;
-    private ServiceReference serviceReference;
+    private ServiceReference monitoringServiceReference;
+    private ServiceReference retrievalServiceReference;
 
-    @Override
-    public void serviceChanged(ServiceEvent serviceEvent) {
-        switch (serviceEvent.getType()) {
-            case (ServiceEvent.REGISTERED):
-                serviceReference = serviceEvent.getServiceReference();
-                Object service = ctx.getService(serviceReference);
-
-                final MonitoringService monitoringService = (MonitoringService) service;
-                final MonitoringListener monitoringListener = new MonitoringListener(EventType.USER, EventType.RANDOM);
-                monitoringService.addMonitoringListener(monitoringListener);
-                break;
-            case (ServiceEvent.UNREGISTERING):
-                ctx.ungetService(serviceEvent.getServiceReference());
-                break;
-            default:
-                break;
-        }
-    }
+    private MonitoringService monitoringService;
+    private RetrievalService retrievalService;
+    private ScheduledExecutorService retrievalExecutor;
 
     @Override
     public void start(BundleContext bundleContext) {
         this.ctx = bundleContext;
-        try {
-            ctx.addServiceListener(this, "(objectclass=" + MonitoringService.class.getName() + ")");
-        } catch (InvalidSyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        this.monitoringServiceReference = bundleContext.getServiceReference(MonitoringService.class.getName());
+        this.monitoringService = (MonitoringService) bundleContext.getService(monitoringServiceReference);
+
+        final MonitoringListener monitoringListener = new MonitoringListener(EventType.USER, EventType.RANDOM);
+        this.monitoringService.addMonitoringListener(monitoringListener);
+
+
+        this.retrievalServiceReference = bundleContext.getServiceReference(RetrievalService.class.getName());
+        this.retrievalService = (RetrievalService) bundleContext.getService(retrievalServiceReference);
+
+        retrievalExecutor = Executors.newSingleThreadScheduledExecutor();
+        retrievalExecutor.scheduleAtFixedRate(
+                this::retrieveEventsIn2Minutes,
+                0,
+                2,
+                TimeUnit.MINUTES
+        );
     }
 
     @Override
     public void stop(BundleContext bundleContext) {
-        if (nonNull(serviceReference)) {
-            ctx.ungetService(serviceReference);
+        if (nonNull(monitoringServiceReference)) {
+            ctx.ungetService(monitoringServiceReference);
         }
+        else if(nonNull(retrievalServiceReference)) {
+            retrievalExecutor.shutdown();
+            ctx.ungetService(retrievalServiceReference);
+        }
+    }
+
+    private void retrieveEventsIn2Minutes() {
+        this.retrievalService.retrieve(EventType.RANDOM, LocalDateTime.now().minusMinutes(2), LocalDateTime.now());
     }
 }

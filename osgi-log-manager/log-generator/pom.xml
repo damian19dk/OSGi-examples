@@ -47,9 +47,6 @@
                         <Bundle-Activator>
                             com.generator.LoggingGenerator
                         </Bundle-Activator>
-                        <Private-Package>
-                            com.generator
-                        </Private-Package>
                         <Export-Package>
                             com.generator
                         </Export-Package>

@@ -20,17 +20,19 @@ public class EventManager implements BundleActivator {
 
     @Override
     public void start(BundleContext bundleContext) {
-        System.out.println("Registering services");
+        System.out.println("Registering services: loggingService, monitoringService, retrievalService");
         loggingServiceRegistration = bundleContext.registerService(LoggingService.class, new LoggingServiceImpl(), new Hashtable<String, String>());
         monitoringServiceRegistration = bundleContext.registerService(MonitoringService.class, new MonitoringServiceImpl(), new Hashtable<String, String>());
         retrievalServiceRegistration = bundleContext.registerService(RetrievalService.class, new RetrievalServiceImpl(), new Hashtable<String, String>());
+        System.out.println("Services registered");
     }
 
     @Override
     public void stop(BundleContext bundleContext) {
-        System.out.println("Unregistering services");
+        System.out.println("Unregistering services: loggingService, monitoringService, retrievalService");
         loggingServiceRegistration.unregister();
         monitoringServiceRegistration.unregister();
         retrievalServiceRegistration.unregister();
+        System.out.println("Services unregistered");
     }
 }
